@@ -57,7 +57,9 @@ def profile(request, username):
 def post_detail(request, post_id):
     template = 'posts/post_detail.html'
     post = Post.objects.select_related('group', 'author').get(id=post_id)
-    comments_in_post = Comment.objects.filter(post_id=post_id)
+    comments_in_post = Comment.objects.select_related('post').filter(
+        post_id=post_id
+    )
     comment_form = CommentForm()
     context = {
         'post': post,
@@ -145,14 +147,16 @@ def follow_index(request):
 def profile_follow(request, username):
     author_object = get_object_or_404(User, username=username)
     if author_object != request.user:
-        Follow.objects.get_or_create(user=request.user, author=author_object)
+        Follow.objects.select_related('user').get_or_create(
+            user=request.user, author=author_object
+        )
     return redirect('posts:profile', username=username)
 
 
 @login_required
 def profile_unfollow(request, username):
     author_object = get_object_or_404(User, username=username)
-    follower_object = Follow.objects.filter(
+    follower_object = Follow.objects.select_related('user').filter(
         user=request.user,
         author=author_object
     )

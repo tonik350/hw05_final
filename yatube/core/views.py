@@ -1,3 +1,5 @@
+from http import HTTPStatus
+
 from django.shortcuts import render
 
 
@@ -6,7 +8,7 @@ def page_not_found(request, exception):
         request,
         'core/404.html',
         {'path': request.path},
-        status=404
+        status=HTTPStatus.NOT_FOUND
     )
 
 
@@ -15,8 +17,12 @@ def csrf_failure(request, reason=''):
 
 
 def permission_denied(request, exception):
-    return render(request, 'core/403.html', status=403)
+    return render(request, 'core/403.html', status=HTTPStatus.FORBIDDEN)
 
 
 def server_error(request):
-    return render(request, 'core/500.html', status=500)
+    return render(
+        request,
+        'core/500.html',
+        status=HTTPStatus.INTERNAL_SERVER_ERROR
+    )
