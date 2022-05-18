@@ -4,7 +4,7 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import cache_page
 
-from .models import Group, Post, User, Comment, Follow
+from .models import Group, Post, User, Follow
 from .forms import PostForm, CommentForm
 
 
@@ -57,9 +57,7 @@ def profile(request, username):
 def post_detail(request, post_id):
     template = 'posts/post_detail.html'
     post = Post.objects.select_related('group', 'author').get(id=post_id)
-    comments_in_post = Comment.objects.select_related('post').filter(
-        post_id=post_id
-    )
+    comments_in_post = post.comments.select_related('author').all()
     comment_form = CommentForm()
     context = {
         'post': post,
@@ -147,19 +145,14 @@ def follow_index(request):
 def profile_follow(request, username):
     author_object = get_object_or_404(User, username=username)
     if author_object != request.user:
-        Follow.objects.select_related('user').get_or_create(
-            user=request.user, author=author_object
-        )
+        author_object.following.get_or_create(user=request.user)
     return redirect('posts:profile', username=username)
 
 
 @login_required
 def profile_unfollow(request, username):
     author_object = get_object_or_404(User, username=username)
-    follower_object = Follow.objects.select_related('user').filter(
-        user=request.user,
-        author=author_object
-    )
+    follower_object = author_object.following.filter(user=request.user)
     if follower_object.exists():
         follower_object.delete()
     return redirect('posts:profile', username=username)
